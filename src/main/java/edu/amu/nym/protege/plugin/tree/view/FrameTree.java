@@ -29,7 +29,7 @@ public class FrameTree extends JPanel {
     public FrameTree(OWLModelManager modelManager) {
     	this.modelManager = modelManager;
         recalculate();
-        
+       System.out.println("blablabla");
         modelManager.addListener(modelListener);
         refreshButton.addActionListener(refreshAction);
         
