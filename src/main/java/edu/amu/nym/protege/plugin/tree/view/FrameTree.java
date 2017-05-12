@@ -1,53 +1,108 @@
 package edu.amu.nym.protege.plugin.tree.view;
 
+import java.awt.BorderLayout;
+import java.awt.Desktop;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.net.URI;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JToolBar;
+import javax.swing.JTree;
 
+import org.protege.editor.core.ui.error.ErrorLogPanel;
+import org.protege.editor.core.ui.util.LinkLabel;
 import org.protege.editor.owl.model.OWLModelManager;
 import org.protege.editor.owl.model.event.EventType;
 import org.protege.editor.owl.model.event.OWLModelManagerListener;
 
+import edu.amu.nym.protege.plugin.set.view.FrameSet;
+
 public class FrameTree extends JPanel {
-	private JButton refreshButton = new JButton("1st tree view");
 
-    private JLabel textComponent = new JLabel();
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5411711042737977576L;
+	
+    public static final URI Classes_IRI_DOCUMENTATION = URI.create("https://www.w3.org/TR/2009/REC-owl2-syntax-20091027/#Classes");
 
-    private OWLModelManager modelManager;
+    public static OWLModelManager modelManager;
+    
+    public static boolean isIndividualsTableClicked = false;
+    
+    public static String individualSelected = "";
+    
+        
+	private final String classesNameFieldLabel = "Arborescence:  ";
+	
+	private JTree classesJTree = new JTree();
 
-
-    private ActionListener refreshAction = e -> recalculate();
+	private FillTree fillTree = new FillTree();
+	
+	private FrameSet frameSet = new FrameSet();
+	
+	
     
     private OWLModelManagerListener modelListener = event -> {
         if (event.getType() == EventType.ACTIVE_ONTOLOGY_CHANGED) {
-            recalculate();
+        	fillComboBox();
         }
     };
     
-    public FrameTree(OWLModelManager modelManager) {
+    @SuppressWarnings("static-access")
+	public FrameTree(OWLModelManager modelManager) {
     	this.modelManager = modelManager;
-        recalculate();
-       System.out.println("blablabla");
+    	fillComboBox();
+
+
         modelManager.addListener(modelListener);
-        refreshButton.addActionListener(refreshAction);
+                
+        setLayout(new BorderLayout());
+        add(createJTree(), BorderLayout.NORTH);
         
-        add(textComponent);
-        add(refreshButton);
+        
+        
     }
+    
+    
     
     public void dispose() {
         modelManager.removeListener(modelListener);
-        refreshButton.removeActionListener(refreshAction);
     }
     
-    private void recalculate() {
-        int count = modelManager.getActiveOntology().getClassesInSignature().size();
-        if (count == 0) {
-            count = 1;  // owl:Thing is always there.
+    private void showOntologyIRIDocumentation() {
+    	try {
+            Desktop.getDesktop().browse(Classes_IRI_DOCUMENTATION);
         }
-        textComponent.setText("Total classes = " + count);
+        catch (IOException ex) {
+            ErrorLogPanel.showErrorDialog(ex);
+        }
     }
+    
+    private JToolBar createJTree() {
+    	JToolBar panel = new JToolBar();
+    	panel.add(new LinkLabel(classesNameFieldLabel , e -> {
+        	showOntologyIRIDocumentation();
+        }));
+    	JScrollPane js = new JScrollPane(classesJTree);
+    	panel.add(js);
+    	return panel;
+    }
+    
+    private void fillComboBox() {
 
+
+    	classesJTree.setModel(fillTree.fillArbreTree());
+
+    	repaint();
+        revalidate();
+    }
+    
 }
